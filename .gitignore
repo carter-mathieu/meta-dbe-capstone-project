@@ -145,6 +145,10 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# mysql workbench
+*.mwb
+*.mwb.bak
+
 # Pyre type checker
 .pyre/
 
