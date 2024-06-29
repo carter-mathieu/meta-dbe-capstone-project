@@ -44,9 +44,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `little_lemon_db`.`tables`
+-- Table `little_lemon_db`.`booking_tables`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `little_lemon_db`.`tables` (
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`booking_tables` (
   `table_id` INT NOT NULL AUTO_INCREMENT,
   `staff_id` INT NOT NULL COMMENT 'Indicates the staff member assigned to the table. Serves as the foreign key to the staff table.',
   PRIMARY KEY (`table_id`),
@@ -73,12 +73,35 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `little_lemon_db`.`bookings`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`bookings` (
+  `booking_id` INT NOT NULL AUTO_INCREMENT,
+  `date` DATETIME NOT NULL COMMENT 'The date that the booking is scheduled for.',
+  `table_id` INT NOT NULL COMMENT 'The table number that the booking is assigned to. Serves as the foreign key to the tables table.',
+  `customer_id` INT NOT NULL COMMENT 'The orders made under the given booking. Serves as the foreign key to the orders table.',
+  PRIMARY KEY (`booking_id`),
+  INDEX `table_id_fk_idx` (`table_id` ASC) VISIBLE,
+  INDEX `customer_id_fk_idx` (`customer_id` ASC) VISIBLE,
+  CONSTRAINT `table_id_fk`
+    FOREIGN KEY (`table_id`)
+    REFERENCES `little_lemon_db`.`booking_tables` (`table_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `customer__booking_id_fk`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `little_lemon_db`.`customers` (`customer_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `little_lemon_db`.`order_status`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `little_lemon_db`.`order_status` (
   `order_status_id` INT NOT NULL AUTO_INCREMENT,
   `status` VARCHAR(255) NOT NULL COMMENT 'The current status of the order delivery such as in progress, completed.',
-  `delivery_date` DATETIME NOT NULL COMMENT 'The date that the order delivery was completed.',
   PRIMARY KEY (`order_status_id`))
 ENGINE = InnoDB;
 
@@ -95,24 +118,6 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `little_lemon_db`.`menu_items`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `little_lemon_db`.`menu_items` (
-  `menu_item_id` INT NOT NULL AUTO_INCREMENT,
-  `item_name` VARCHAR(255) NOT NULL COMMENT 'The name of the menu item.',
-  `price` DECIMAL(6,2) NOT NULL COMMENT 'The price to charge for the menu item when ordered.',
-  `menu_id` INT NOT NULL COMMENT 'The id of the menu the item belongs to acting as the foreign key to the menu table.',
-  PRIMARY KEY (`menu_item_id`),
-  INDEX `menu_fk_idx` (`menu_id` ASC) VISIBLE,
-  CONSTRAINT `menu_id_fk`
-    FOREIGN KEY (`menu_id`)
-    REFERENCES `little_lemon_db`.`menu` (`menu_id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `little_lemon_db`.`orders`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `little_lemon_db`.`orders` (
@@ -121,51 +126,60 @@ CREATE TABLE IF NOT EXISTS `little_lemon_db`.`orders` (
   `quantity` INT NOT NULL COMMENT 'Indicates the quantity of the menu item ordered.',
   `order_total` DECIMAL(6,2) NOT NULL COMMENT 'Indicates the total cost of the order based on the menu item price and quantity of the item ordered.',
   `order_status_id` INT NOT NULL COMMENT 'Serves as the foreign key to the order status table.',
-  `menu_item_id` INT NOT NULL COMMENT 'Serves as the foreign key to the menu items table.',
+  `menu_id` INT NOT NULL COMMENT 'Serves as the foreign key to the menu items table.',
+  `customer_id` INT NOT NULL COMMENT 'Relates to the customer table',
   PRIMARY KEY (`order_id`),
   INDEX `order_status_id_fk_idx` (`order_status_id` ASC) VISIBLE,
-  INDEX `menu_item_id_fk_idx` (`menu_item_id` ASC) VISIBLE,
+  INDEX `menu_id_fk_idx` (`menu_id` ASC) VISIBLE,
+  INDEX `customer_id_fk_idx` (`customer_id` ASC) VISIBLE,
   CONSTRAINT `order_status_id_fk`
     FOREIGN KEY (`order_status_id`)
     REFERENCES `little_lemon_db`.`order_status` (`order_status_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `menu_item_id_fk`
-    FOREIGN KEY (`menu_item_id`)
-    REFERENCES `little_lemon_db`.`menu_items` (`menu_item_id`)
+  CONSTRAINT `menu_id_fk`
+    FOREIGN KEY (`menu_id`)
+    REFERENCES `little_lemon_db`.`menu` (`menu_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `customer_order_id_fk`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `little_lemon_db`.`customers` (`customer_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `little_lemon_db`.`bookings`
+-- Table `little_lemon_db`.`menu_items`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `little_lemon_db`.`bookings` (
-  `booking_id` INT NOT NULL AUTO_INCREMENT,
-  `date` DATETIME NOT NULL COMMENT 'The date that the booking is scheduled for.',
-  `table_id` INT NOT NULL COMMENT 'The table number that the booking is assigned to. Serves as the foreign key to the tables table.',
-  `customer_id` INT NOT NULL COMMENT 'The customer the booking is assigned to. Serves as the foreign key to the customers table.',
-  `order_id` INT NOT NULL COMMENT 'The orders made under the given booking. Serves as the foreign key to the orders table.',
-  PRIMARY KEY (`booking_id`),
-  INDEX `table_id_fk_idx` (`table_id` ASC) VISIBLE,
-  INDEX `customer_id_fk_idx` (`customer_id` ASC) VISIBLE,
-  INDEX `order_id_fk_idx` (`order_id` ASC) VISIBLE,
-  CONSTRAINT `table_id_fk`
-    FOREIGN KEY (`table_id`)
-    REFERENCES `little_lemon_db`.`tables` (`table_id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `customer_id_fk`
-    FOREIGN KEY (`customer_id`)
-    REFERENCES `little_lemon_db`.`customers` (`customer_id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `order_id_fk`
-    FOREIGN KEY (`order_id`)
-    REFERENCES `little_lemon_db`.`orders` (`order_id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE)
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`menu_items` (
+  `menu_item_id` INT NOT NULL AUTO_INCREMENT,
+  `item_name` VARCHAR(255) NOT NULL COMMENT 'The name of the menu item.',
+  `price` DECIMAL(6,2) NOT NULL COMMENT 'The price to charge for the menu item when ordered.',
+  PRIMARY KEY (`menu_item_id`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `little_lemon_db`.`menu_has_menu_items`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`menu_has_menu_items` (
+  `menu_menu_id` INT NOT NULL,
+  `menu_items_menu_item_id` INT NOT NULL,
+  PRIMARY KEY (`menu_menu_id`, `menu_items_menu_item_id`),
+  INDEX `fk_menu_has_menu_items_menu_items1_idx` (`menu_items_menu_item_id` ASC) VISIBLE,
+  INDEX `fk_menu_has_menu_items_menu1_idx` (`menu_menu_id` ASC) VISIBLE,
+  CONSTRAINT `fk_menu_has_menu_items_menu1`
+    FOREIGN KEY (`menu_menu_id`)
+    REFERENCES `little_lemon_db`.`menu` (`menu_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_menu_has_menu_items_menu_items1`
+    FOREIGN KEY (`menu_items_menu_item_id`)
+    REFERENCES `little_lemon_db`.`menu_items` (`menu_item_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
