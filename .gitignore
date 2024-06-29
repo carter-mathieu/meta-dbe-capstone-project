@@ -134,6 +134,10 @@ venv.bak/
 .spyderproject
 .spyproject
 
+# Tableau project workbook files
+*.twb
+*.twbr
+
 # Rope project settings
 .ropeproject
 
